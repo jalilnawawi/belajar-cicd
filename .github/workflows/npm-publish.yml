@@ -10,18 +10,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - run: npm ci
-      - run: npm run build --if-present
-      - run: echo "Hello Actions"
-      
-  test:
+  setup: 
+
     runs-on: ubuntu-latest
 
     # strategy:
@@ -31,11 +21,41 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm run build --if-present
-    - run: npm test
+    - name: Setup project before build
+      run: npm install
+
+  build:
+    runs-on: ubuntu-latest
+    need: setup
+    # strategy:
+    #   matrix:
+    #     node-version: [14.x, 16.x, 18.x]
+    #     # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install package
+      run: npm install --silent
+    - name: Building the project first
+      run: npm run build --if-present
+      
+  deploy:
+    runs-on: ubuntu-latest
+    need: build
+
+    # strategy:
+    #   matrix:
+    #     node-version: [14.x, 16.x, 18.x]
+    #     # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install package Vercel CLI
+      run: npm install --global vercel@latest
+    - name: Pull Vercel Env Information
+      run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+    - name: Build project before deploy to Vercel
+      run: vercel build  --prod --token=${{ secrets.VERCEL_TOKEN }}
+    - name: Deploy project to Vercel
+      run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
   
