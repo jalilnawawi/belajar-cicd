@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  setup: 
+  setup:
 
     runs-on: ubuntu-latest
 
@@ -23,10 +23,11 @@ jobs:
     - uses: actions/checkout@v3
     - name: Setup project before build
       run: npm install
-
+  
   build:
     runs-on: ubuntu-latest
-    need: setup
+    needs: setup
+
     # strategy:
     #   matrix:
     #     node-version: [14.x, 16.x, 18.x]
@@ -38,10 +39,10 @@ jobs:
       run: npm install --silent
     - name: Building the project first
       run: npm run build --if-present
-      
+  
   deploy:
     runs-on: ubuntu-latest
-    need: build
+    needs: build
 
     # strategy:
     #   matrix:
@@ -58,4 +59,3 @@ jobs:
       run: vercel build  --prod --token=${{ secrets.VERCEL_TOKEN }}
     - name: Deploy project to Vercel
       run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-  
